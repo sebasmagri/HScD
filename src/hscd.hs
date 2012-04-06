@@ -7,18 +7,24 @@ import System.Environment
 
 import Network.SoundCloud
 
-data Options = Options { optURL :: IO String
-                       , optOutput :: String -> IO ()}
+data Options = Options { optTrackURL    :: Maybe String
+                       , optResolve     :: Maybe String
+                       , optOutput      :: Maybe String
+                       }
 options :: [OptDescr (Options -> IO Options)]
 options = [
-        Option "u" ["url"]
-            (ReqArg (\arg opt -> return opt { optURL = return arg })
+        Option "t" ["track"]
+            (ReqArg (\arg opt -> return opt { optTrackURL = return arg })
                 "URL")
-            "Track URL"
+            "Indicate the Track URL to be downloaded."
+      , Option "r" ["resolve"]
+            (ReqArg (\arg opt -> return opt { optResolve = return arg })
+                "URL")
+            "Resolve the API URL for an arbitrary URL. Supports users, tracks, sets, groups and apps"
       , Option "o" ["output"]
             (ReqArg
-                (\arg opt -> return opt { optOutput = writeFile arg })
-                "OUTPUT")
+                (\arg opt -> return opt { optOutput = return arg })
+                "FILE")
             "Output File"
       , Option "h" ["help"]
            (NoArg
@@ -28,22 +34,39 @@ options = [
 
 defaultOptions :: Options
 defaultOptions = Options
-    { optURL     = exitErrorHelp "use -u to indicate the track's URL"
-    , optOutput  = putStr
+    { optTrackURL       = Nothing
+    , optResolve        = Nothing
+    , optOutput         = Nothing
     }
+
+processOpts :: (Maybe String, Maybe String, Maybe String) -> IO ()
+processOpts opts@(a,b,c) =
+    if all (==Nothing) [a,b,c]
+    then exitErrorHelp "No options supplied"
+    else
+        case opts of
+          (Just a0, Nothing, Just c0)   -> scFetchTrack a0 c0
+          (Just a0, Nothing, Nothing)    -> scFetchTrack a0 ""
+          (Nothing, Just b0, Nothing)   ->
+              do uri <- scResolve b0
+                 putStrLn uri
+          (_, _, _)                  -> exitErrorHelp ""
+
 
 main :: IO ()
 main = do
      args <- getArgs
-     let (actions, nonOptions, errors) = getOpt RequireOrder options args
+     let (actions, _, _) = getOpt RequireOrder options args
 
      opts <- foldl (>>=) (return defaultOptions) actions
 
-     let Options { optURL = url
-                 , optOutput = output } = opts
-     strUrl <- url
-     scResolve strUrl
+     let Options { optTrackURL   = trackUrl
+                 , optResolve    = resolve
+                 , optOutput     = output
+                 } = opts
+     let optsTracker = (trackUrl, resolve, output)
 
+     processOpts optsTracker
 
 exitErrorHelp :: String -> IO a
 exitErrorHelp msg = do
@@ -61,4 +84,4 @@ showHelp = do
 exitHelp :: IO a
 exitHelp = do
     showHelp
-    exitWith ExitSuccess
+    exitSuccess

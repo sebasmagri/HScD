@@ -7,23 +7,16 @@ module Network.SoundCloud where
 
 import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import GHC.Generics (Generic)
+import Data.List
 import Network.HTTP
 import System.IO
 
-
-data ScJSON = ScJSON { id                       :: Int
-                       , user_id                :: Int
-                       , original_content_size  :: Int
-                       , downloadable           :: Bool
-                       , title                  :: String
-                       , original_format        :: String
-                       , download_url           :: String
-                       } deriving (Show, Generic)
-
-instance FromJSON ScJSON
-instance ToJSON   ScJSON
-
+import qualified Network.SoundCloud.Track as Track
+import qualified Network.SoundCloud.User as User
+import qualified Network.SoundCloud.Set as Set
+import qualified Network.SoundCloud.Group as Group
+import qualified Network.SoundCloud.Comment as Comment
+import qualified Network.SoundCloud.App as App
 
 clientId :: String
 clientId = "934a79db328a60a0ea459ab9e45c1735"
@@ -107,23 +100,24 @@ scFetch dUrl out =
 
 scFetchTrack :: String -> String -> IO ()
 scFetchTrack trackUrl output =
-    do tUrl <- scResolve trackUrl
-       dat <- scGetJSON tUrl
-       let o = decode (BSL.pack dat) :: Maybe ScJSON
+    do dat <- scGetInfo trackUrl
+       let o = decode (BSL.pack dat) :: Maybe Track.JsonRecord
        case o of
          Nothing        -> putStrLn "Unable to get track information."
          Just obj       ->
-             if downloadable obj then
-                 do let dUrlStr = concat [download_url obj, "?client_id=", clientId]
-                    let filename = if null output then "./" ++ title obj ++ "." ++ original_format obj else output
-                    putStrLn $ "Fetching " ++ show (original_content_size obj) ++ " bytes"
+             if Track.downloadable obj then
+                 do let dUrlStr = concat [Track.download_url obj, "?client_id=", clientId]
+                    let filename = if null output then
+                                       "./" ++ Track.title obj ++ "." ++ Track.original_format obj
+                                   else output
+                    putStrLn $ "Fetching " ++ show (Track.original_content_size obj) ++ " bytes"
                     scFetch dUrlStr filename
              else putStrLn "Track is not downloadable"
 
 
 {-
 This function's request will always return a (3,_,_) status,
-so we can return the redirection Location
+so we can just return the redirection Location
 -}
 scResolve :: String -> IO String
 scResolve url =
@@ -134,3 +128,22 @@ scResolve url =
     where
         resolveUrl = concat [resolveURL, ".json?url=", url, "&client_id=", clientId]
 
+scResourceType :: String -> String
+scResourceType url | tracksURL    `isPrefixOf` url      = "track"
+                   | usersURL     `isPrefixOf` url      = "user"
+                   | playlistsURL `isPrefixOf` url      = "set"
+                   | groupsURL    `isPrefixOf` url      = "group"
+                   | commentsURL  `isPrefixOf` url      = "comment"
+                   | appsURLS     `isPrefixOf` url      = "app"
+scResourceType _                                        = ""
+
+
+{-
+Get the information about an arbitrary object given its URL
+-}
+scGetInfo :: String -> IO String
+scGetInfo url =
+    do tUrl <- scResolve url
+       dat  <- scGetJSON tUrl
+       putStrLn $ scResourceType tUrl
+       return dat

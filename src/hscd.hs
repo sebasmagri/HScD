@@ -11,6 +11,7 @@ data Options = Options { optTrackURL    :: Maybe String
                        , optResolve     :: Maybe String
                        , optOutput      :: Maybe String
                        }
+
 options :: [OptDescr (Options -> IO Options)]
 options = [
         Option "t" ["track"]
@@ -20,7 +21,7 @@ options = [
       , Option "r" ["resolve"]
             (ReqArg (\arg opt -> return opt { optResolve = return arg })
                 "URL")
-            "Resolve the API URL for an arbitrary URL. Supports users, tracks, sets, groups and apps"
+            "Resolve the SoundCloud's API URL for an arbitrary URL. Supports users, tracks, sets, groups and apps"
       , Option "o" ["output"]
             (ReqArg
                 (\arg opt -> return opt { optOutput = return arg })
@@ -46,7 +47,7 @@ processOpts opts@(a,b,c) =
     else
         case opts of
           (Just a0, Nothing, Just c0)   -> scFetchTrack a0 c0
-          (Just a0, Nothing, Nothing)    -> scFetchTrack a0 ""
+          (Just a0, Nothing, Nothing)   -> scFetchTrack a0 ""
           (Nothing, Just b0, Nothing)   ->
               do uri <- scResolve b0
                  putStrLn uri

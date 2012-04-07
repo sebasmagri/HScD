@@ -26,27 +26,6 @@ source-repository head
     type:     mercurial
     location: https://bitbucket.org/sebasmagri/hscd
 
-library
-    build-depends: aeson == 0.6.*
-                 , base == 4.*
-                 , bytestring
-                 , ghc-prim
-                 , HTTP
-    hs-source-dirs: src/
-    exposed-modules:
-        Network.SoundCloud
-        Network.SoundCloud.App
-        Network.SoundCloud.Comment
-        Network.SoundCloud.Const
-        Network.SoundCloud.Group
-        Network.SoundCloud.MiniUser
-        Network.SoundCloud.Set
-        Network.SoundCloud.Track
-        Network.SoundCloud.User
-        Network.SoundCloud.Util
-    ghc-options: -W -Wall
-
-
 executable hscd
     build-depends: aeson == 0.6.*
                  , base == 4.*

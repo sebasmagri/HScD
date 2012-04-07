@@ -2,10 +2,12 @@
 
 module Network.SoundCloud.User where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson (FromJSON, ToJSON, decode)
+import qualified Data.ByteString.Lazy.Char8 as BSL
 import GHC.Generics (Generic)
 
 data JsonRecord = JsonRecord { id                     :: Int
+                             , uri                    :: String
                              , permalink_url          :: String
                              , country                :: String
                              , full_name              :: String
@@ -23,3 +25,9 @@ data JsonRecord = JsonRecord { id                     :: Int
 
 instance FromJSON JsonRecord
 instance ToJSON   JsonRecord
+
+decodeJSON :: String -> Maybe JsonRecord
+decodeJSON dat = decode (BSL.pack dat) :: Maybe JsonRecord
+
+showInfo :: String -> IO ()
+showInfo trackUrl = putStrLn "Not Implemented"

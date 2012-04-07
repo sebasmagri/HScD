@@ -14,9 +14,9 @@ import Network.SoundCloud.Const (clientId, tracksURL)
 import qualified Network.SoundCloud.MiniUser as User
 import qualified Network.SoundCloud.Comment as Comment
 
-data Json = Json { id                     :: Int
+data JSON = JSON { id                     :: Int
                  , created_at             :: String
-                 , user                   :: User.JsonRecord
+                 , user                   :: User.JSON
                  , title                  :: String
                  , permalink_url          :: String
                  , sharing                :: String
@@ -43,33 +43,33 @@ data Json = Json { id                     :: Int
                  , tag_list               :: String
                  } deriving (Show, Generic)
 
-instance FromJSON Json
-instance ToJSON   Json
+instance FromJSON JSON
+instance ToJSON   JSON
 
-data DownloadJson = DownloadJson { download_url     :: String
+data DownloadJSON = DownloadJSON { download_url     :: String
                                  } deriving (Show, Generic)
 
-instance FromJSON DownloadJson
-instance ToJSON   DownloadJson
+instance FromJSON DownloadJSON
+instance ToJSON   DownloadJSON
 
-decodeJson :: String -> Maybe Json
-decodeJson dat = decode (BSL.pack dat) :: Maybe Json
+decodeJSON :: String -> Maybe JSON
+decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
-getJson :: String -> IO (Maybe Json)
-getJson url =
+getJSON :: String -> IO (Maybe JSON)
+getJSON url =
     do tUrl <- scResolve url
        dat  <- scGet tUrl True
        case dat of
          Nothing -> return Nothing
-         Just d  -> return $ decodeJson d
+         Just d  -> return $ decodeJSON d
 
-decodeDownloadJson :: String -> Maybe DownloadJson
-decodeDownloadJson dat = decode (BSL.pack dat) :: Maybe DownloadJson
+decodeDownloadJSON :: String -> Maybe DownloadJSON
+decodeDownloadJSON dat = decode (BSL.pack dat) :: Maybe DownloadJSON
 
-decodeComments :: String -> Maybe [Comment.Json]
-decodeComments dat = decode (BSL.pack dat) :: Maybe [Comment.Json]
+decodeComments :: String -> Maybe [Comment.JSON]
+decodeComments dat = decode (BSL.pack dat) :: Maybe [Comment.JSON]
 
-getComments :: Int -> IO (Maybe [Comment.Json])
+getComments :: Int -> IO (Maybe [Comment.JSON])
 getComments trackId =
     do let url = tracksURL ++ "/" ++ show trackId ++ "/comments.json?client_id=" ++ clientId
        dat <- scGet url True
@@ -77,11 +77,12 @@ getComments trackId =
          Nothing -> return Nothing
          Just d  -> return $ decodeComments d
 
-showComment :: Comment.Json -> String
+showComment :: Comment.JSON -> String
 showComment c = concat ["\nAt ", Comment.created_at c, ", ", User.username $ Comment.user c, " said:\n", Comment.body c, "\n"]
 
-showComments :: [Comment.Json] -> String
-showComments comments = if null comments then "No comments" else concatMap showComment comments
+showComments :: [Comment.JSON] -> String
+showComments [] = "No comments"
+showComments xs = concatMap showComment xs
 
 fetch :: String -> String -> IO ()
 fetch trackUrl output =
@@ -90,12 +91,12 @@ fetch trackUrl output =
        case dat of
          Nothing -> putStrLn "Unable to connect"
          Just d  ->
-             do let o = decodeJson d
+             do let o = decodeJSON d
                 case o of
                   Nothing        -> putStrLn "Unable to get track information."
                   Just obj       ->
                       if downloadable obj then
-                          do let obj0 = decodeDownloadJson d
+                          do let obj0 = decodeDownloadJSON d
                              let dUrlStr = concat [download_url $ fromJust obj0, "?client_id=", clientId]
                              let filename = if null output then
                                                "./" ++ title obj ++ "." ++ original_format obj
@@ -104,7 +105,7 @@ fetch trackUrl output =
                              scFetch dUrlStr filename
                       else putStrLn "Track is not downloadable"
 
-trackComments :: Int -> IO [Comment.Json]
+trackComments :: Int -> IO [Comment.JSON]
 trackComments trackId =
     do obj <- getComments trackId
        case obj of
@@ -113,7 +114,7 @@ trackComments trackId =
 
 showInfo :: String -> IO ()
 showInfo trackUrl =
-    do obj <- getJson trackUrl
+    do obj <- getJSON trackUrl
        case obj of
          Nothing        -> putStrLn "Unable to get track information."
          Just o         ->

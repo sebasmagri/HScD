@@ -8,16 +8,16 @@ import GHC.Generics (Generic)
 
 import qualified Network.SoundCloud.MiniUser as User
 
-data Json = Json { id                     :: Int
+data JSON = JSON { id                     :: Int
                  , created_at             :: String
                  , body                   :: String
                  , timestamp              :: Maybe Int
-                 , user                   :: User.JsonRecord
+                 , user                   :: User.JSON
                  , track_id               :: Int
                  } deriving (Show, Generic)
 
-instance FromJSON Json
-instance ToJSON   Json
+instance FromJSON JSON
+instance ToJSON   JSON
 
-decodeJson :: String -> Maybe Json
-decodeJson dat = decode (BSL.pack dat) :: Maybe Json
+decodeJSON :: String -> Maybe JSON
+decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON

@@ -40,7 +40,7 @@ scResourceType url | tracksURL    `isPrefixOf` url      = "track"
                    | groupsURL    `isPrefixOf` url      = "group"
                    | commentsURL  `isPrefixOf` url      = "comment"
                    | appsURLS     `isPrefixOf` url      = "app"
-scResourceType _                                        = ""
+                   | otherwise                          = "app"
 
 {-
 This function's request will always return a (3,_,_) status,

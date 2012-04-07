@@ -22,7 +22,7 @@ scResourceShowInfo :: String -> IO ()
 scResourceShowInfo url | scResourceType url == "track"   = Track.showInfo url
                        | scResourceType url == "user"    = User.showInfo url
                        | scResourceType url == "set"     = Set.showInfo
-                       | scResourceType url == "group"   = Group.showInfo
+                       | scResourceType url == "group"   = Group.showInfo url
                        | scResourceType url == "app"     = App.showInfo url
 scResourceShowInfo _                                     = putStrLn "Unrecognized resource"
 

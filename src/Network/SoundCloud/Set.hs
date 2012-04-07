@@ -5,8 +5,12 @@ module Network.SoundCloud.Set where
 import Data.Aeson (FromJSON, ToJSON, decode)
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import GHC.Generics (Generic)
+import Text.Printf (printf)
 
 import qualified Network.SoundCloud.MiniUser as User
+import qualified Network.SoundCloud.Track as Track
+import Network.SoundCloud.Util (scGet, scResolve)
+
 
 data JSON = JSON { id                     :: Int
                  , created_at             :: String
@@ -15,17 +19,16 @@ data JSON = JSON { id                     :: Int
                  , permalink_url          :: String
                  , sharing                :: String
                  , description            :: String
-                 , label                  :: User.JSON
                  , duration               :: Int
                  , genre                  :: String
-                 , shared_to_count        :: Int
                  , license                :: String
-                 , release_day            :: Int
-                 , release_month          :: Int
-                 , release_year           :: Int
+                 , release_day            :: Maybe Int
+                 , release_month          :: Maybe Int
+                 , release_year           :: Maybe Int
                  , streamable             :: Bool
                  , downloadable           :: Bool
                  , playlist_type          :: String
+                 , tracks                 :: [Track.JSON]
                  } deriving (Show, Generic)
 
 instance FromJSON JSON
@@ -34,5 +37,33 @@ instance ToJSON   JSON
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
-showInfo :: IO ()
-showInfo = putStrLn "Not Implemented for sets"
+getJSON :: String -> IO (Maybe JSON)
+getJSON url =
+    do tUrl <- scResolve url
+       dat  <- scGet tUrl True
+       case dat of
+         Nothing -> return Nothing
+         Just d  -> return $ decodeJSON d
+
+showTrack :: Track.JSON -> String
+showTrack t = concat ["\t", Track.title t, " by ", User.username $ Track.user t, " (", Track.permalink_url t,")\n"]
+
+showTracks :: [Track.JSON] -> String
+showTracks = concatMap showTrack
+
+showInfo :: String -> IO ()
+showInfo url =
+    do obj <- getJSON url
+       case obj of
+         Nothing        -> putStrLn "Unable to get set information."
+         Just o         ->
+             do let tmp = "%s\n%s by %s (%s)\n\t%s\nCreated at: %s\n\nTracks:\n%s\n"
+                printf
+                  tmp
+                  (permalink_url o)
+                  (title o)
+                  (User.username $ user o)
+                  (genre o)
+                  (description o)
+                  (created_at o)
+                  (showTracks $ tracks o)

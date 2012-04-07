@@ -1,5 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+{- |
+   Module:      Network.SoundCloud.Track
+   Copyright:   (c) 2012 Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   License:     BSD3
+   Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   Stability:   experimental
+
+   Implements tracks and related types and functions
+-}
+
 module Network.SoundCloud.Track where
 
 import Data.Aeson (FromJSON, ToJSON, decode)
@@ -14,6 +24,7 @@ import Network.SoundCloud.Const (clientId, tracksURL)
 import qualified Network.SoundCloud.MiniUser as User
 import qualified Network.SoundCloud.Comment as Comment
 
+-- | Represent a track's JSON as a record
 data JSON = JSON { id                     :: Int
                  , created_at             :: String
                  , user                   :: User.JSON
@@ -46,15 +57,19 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
+-- | Simple record to parse download_url from a track's JSON
 data DownloadJSON = DownloadJSON { download_url     :: String
                                  } deriving (Show, Generic)
 
 instance FromJSON DownloadJSON
 instance ToJSON   DownloadJSON
 
+-- | Decode a JSON record from a track valid JSON string
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
+-- | Get a JSON record given a track URL
+-- as in http://soundcloud.com/artist/track_title
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url
@@ -63,12 +78,15 @@ getJSON url =
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d
 
+-- | Decode a DownloadJSON record out of a track's JSON
 decodeDownloadJSON :: String -> Maybe DownloadJSON
 decodeDownloadJSON dat = decode (BSL.pack dat) :: Maybe DownloadJSON
 
+-- | Decode a comment JSON list given a track id
 decodeComments :: String -> Maybe [Comment.JSON]
 decodeComments dat = decode (BSL.pack dat) :: Maybe [Comment.JSON]
 
+-- | Given the track id, get its comments as a list of Comment.JSON
 getComments :: Int -> IO (Maybe [Comment.JSON])
 getComments trackId =
     do let url = tracksURL ++ "/" ++ show trackId ++ "/comments.json?client_id=" ++ clientId
@@ -77,13 +95,7 @@ getComments trackId =
          Nothing -> return Nothing
          Just d  -> return $ decodeComments d
 
-showComment :: Comment.JSON -> String
-showComment c = concat ["\nAt ", Comment.created_at c, ", ", User.username $ Comment.user c, " said:\n", Comment.body c, "\n"]
-
-showComments :: [Comment.JSON] -> String
-showComments [] = "No comments"
-showComments xs = concatMap showComment xs
-
+-- | Fetch a downloadable track
 fetch :: String -> String -> IO ()
 fetch trackUrl output =
     do tUrl <- scResolve trackUrl
@@ -105,13 +117,8 @@ fetch trackUrl output =
                              scFetch dUrlStr filename
                       else putStrLn "Track is not downloadable"
 
-trackComments :: Int -> IO [Comment.JSON]
-trackComments trackId =
-    do obj <- getComments trackId
-       case obj of
-         Nothing -> return []
-         Just o  -> return o
-
+-- | Show general information about the track at the given URL
+-- in the standard output
 showInfo :: String -> IO ()
 showInfo trackUrl =
     do obj <- getJSON trackUrl
@@ -119,7 +126,8 @@ showInfo trackUrl =
          Nothing        -> putStrLn "Unable to get track information."
          Just o         ->
              do let tmp = "%s\n%s - %s\n\t%s\nPlays: %d\nComments: %d\nDownloads: %d\nTags:%s\n\nComments:\n%s\n"
-                comments <- trackComments $ id o
+                comments <- getComments $ id o
+                let commentsList = fromJust comments
                 printf
                   tmp
                   (permalink_url o)
@@ -130,4 +138,4 @@ showInfo trackUrl =
                   (comment_count o)
                   (download_count o)
                   (tag_list o)
-                  (showComments comments)
+                  (if not $ null commentsList then concatMap Comment.showComment commentsList else "No comments")

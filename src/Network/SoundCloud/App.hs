@@ -1,5 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+{- |
+   Module:      Network.SoundCloud.App
+   Copyright:   (c) 2012 Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   License:     BSD3
+   Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   Stability:   experimental
+
+   Represents SoundCloud applications as found at http://soundcloud.com/apps
+-}
+
 module Network.SoundCloud.App where
 
 import Data.Aeson (FromJSON, ToJSON, decode)
@@ -9,6 +19,8 @@ import Text.Printf (printf)
 
 import Network.SoundCloud.Util (scGet, scResolve)
 
+-- | JSON representation of applications as described
+-- in http://developers.soundcloud.com/docs/api/apps
 data JSON = JSON { id                     :: Int
                  , permalink_url          :: String
                  , external_url           :: String
@@ -18,9 +30,14 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
+-- | Decode a valid JSON string into an application
+-- JSON record
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
+
+-- | Get an application JSON record given a public app URL
+-- as in http://soundcloud.com/apps/app_name
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url
@@ -29,6 +46,8 @@ getJSON url =
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d
 
+-- | Show general information about an application in the
+-- standard output
 showInfo :: String -> IO ()
 showInfo url =
     do obj <- getJSON url

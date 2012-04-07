@@ -1,5 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+{- |
+   Module:      Network.SoundCloud.Group
+   Copyright:   (c) 2012 Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   License:     BSD3
+   Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   Stability:   experimental
+
+   Represents Groups as in http://soundcloud.com/groups
+-}
+
 module Network.SoundCloud.Group where
 
 import Data.Aeson (FromJSON, ToJSON, decode)
@@ -10,6 +20,7 @@ import Text.Printf (printf)
 import qualified Network.SoundCloud.MiniUser as User
 import Network.SoundCloud.Util (scGet, scResolve)
 
+-- | Represents group's JSON as a record
 data JSON = JSON { id                     :: Int
                  , created_at             :: String
                  , permalink_url          :: String
@@ -22,9 +33,12 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
+-- | Decode a group's valid JSON string into a record
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
+-- | Get a group record given a public URL
+-- as in http://soundcloud.com/groups/group_name
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url
@@ -33,6 +47,8 @@ getJSON url =
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d
 
+-- | Show general information about a group in the
+-- standard output
 showInfo :: String -> IO ()
 showInfo url =
     do obj <- getJSON url

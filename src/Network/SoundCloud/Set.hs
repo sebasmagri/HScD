@@ -1,5 +1,15 @@
 {-# LANGUAGE DeriveGeneric #-}
 
+{- |
+   Module:      Network.SoundCloud.Set
+   Copyright:   (c) 2012 Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   License:     BSD3
+   Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
+   Stability:   experimental
+
+   Representations for track sets
+-}
+
 module Network.SoundCloud.Set where
 
 import Data.Aeson (FromJSON, ToJSON, decode)
@@ -11,7 +21,7 @@ import qualified Network.SoundCloud.MiniUser as User
 import qualified Network.SoundCloud.Track as Track
 import Network.SoundCloud.Util (scGet, scResolve)
 
-
+-- | Represents Set JSON as a record
 data JSON = JSON { id                     :: Int
                  , created_at             :: String
                  , user                   :: User.JSON
@@ -26,7 +36,7 @@ data JSON = JSON { id                     :: Int
                  , release_month          :: Maybe Int
                  , release_year           :: Maybe Int
                  , streamable             :: Bool
-                 , downloadable           :: Bool
+                 , downloadable           :: Maybe Bool
                  , playlist_type          :: String
                  , tracks                 :: [Track.JSON]
                  } deriving (Show, Generic)
@@ -34,9 +44,13 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
+-- | Decode a JSON record from a valid set
+-- JSON string
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
+-- | Get a set JSON record given it's public URL
+-- as in http://soundcloud.com/artist/set_title
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url
@@ -45,12 +59,12 @@ getJSON url =
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d
 
+-- | Get a string with a summary description of a track
 showTrack :: Track.JSON -> String
 showTrack t = concat ["\t", Track.title t, " by ", User.username $ Track.user t, " (", Track.permalink_url t,")\n"]
 
-showTracks :: [Track.JSON] -> String
-showTracks = concatMap showTrack
-
+-- | Show general information about a set in the
+-- standard output
 showInfo :: String -> IO ()
 showInfo url =
     do obj <- getJSON url
@@ -66,4 +80,4 @@ showInfo url =
                   (genre o)
                   (description o)
                   (created_at o)
-                  (showTracks $ tracks o)
+                  (concatMap showTrack $ tracks o)

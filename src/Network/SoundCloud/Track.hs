@@ -6,11 +6,13 @@ import Data.Aeson (FromJSON, ToJSON, decode)
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Data.Maybe (fromJust)
 import GHC.Generics (Generic)
+import Prelude hiding (id)
 import Text.Printf (printf)
 
 import Network.SoundCloud.Util (scGet, scFetch, scResolve)
-import Network.SoundCloud.Const (clientId)
+import Network.SoundCloud.Const (clientId, tracksURL)
 import qualified Network.SoundCloud.MiniUser as User
+import qualified Network.SoundCloud.Comment as Comment
 
 data Json = Json { id                     :: Int
                  , created_at             :: String
@@ -64,6 +66,23 @@ getJson url =
 decodeDownloadJson :: String -> Maybe DownloadJson
 decodeDownloadJson dat = decode (BSL.pack dat) :: Maybe DownloadJson
 
+decodeComments :: String -> Maybe [Comment.Json]
+decodeComments dat = decode (BSL.pack dat) :: Maybe [Comment.Json]
+
+getComments :: Int -> IO (Maybe [Comment.Json])
+getComments trackId =
+    do let url = tracksURL ++ "/" ++ show trackId ++ "/comments.json?client_id=" ++ clientId
+       dat <- scGet url True
+       case dat of
+         Nothing -> return Nothing
+         Just d  -> return $ decodeComments d
+
+showComment :: Comment.Json -> String
+showComment c = concat ["\nAt ", Comment.created_at c, ", ", User.username $ Comment.user c, " said:\n", Comment.body c, "\n"]
+
+showComments :: [Comment.Json] -> String
+showComments comments = if null comments then "No comments" else concatMap showComment comments
+
 fetch :: String -> String -> IO ()
 fetch trackUrl output =
     do tUrl <- scResolve trackUrl
@@ -85,13 +104,21 @@ fetch trackUrl output =
                              scFetch dUrlStr filename
                       else putStrLn "Track is not downloadable"
 
+trackComments :: Int -> IO [Comment.Json]
+trackComments trackId =
+    do obj <- getComments trackId
+       case obj of
+         Nothing -> return []
+         Just o  -> return o
+
 showInfo :: String -> IO ()
 showInfo trackUrl =
     do obj <- getJson trackUrl
        case obj of
          Nothing        -> putStrLn "Unable to get track information."
          Just o         ->
-             do let tmp = "%s\n%s - %s\n\t%s\nPlays: %d\nComments: %d\nDownloads: %d\nTags:%s\n"
+             do let tmp = "%s\n%s - %s\n\t%s\nPlays: %d\nComments: %d\nDownloads: %d\nTags:%s\n\nComments:\n%s\n"
+                comments <- trackComments $ id o
                 printf
                   tmp
                   (permalink_url o)
@@ -102,3 +129,4 @@ showInfo trackUrl =
                   (comment_count o)
                   (download_count o)
                   (tag_list o)
+                  (showComments comments)

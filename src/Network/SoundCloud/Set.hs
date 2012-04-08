@@ -44,13 +44,13 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
--- | Decode a JSON record from a valid set
+-- | Decode a 'JSON' record from a valid set
 -- JSON string
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
--- | Get a set JSON record given it's public URL
--- as in http://soundcloud.com/artist/set_title
+-- | Get a set 'JSON' record given it's public URL
+-- as in <http://soundcloud.com/artist/set_title>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url

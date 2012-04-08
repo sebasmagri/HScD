@@ -31,7 +31,7 @@ instance FromJSON JSON
 instance ToJSON   JSON
 
 -- | Decode a comment's valid JSON string into
--- a comment's JSON record
+-- a comment's 'JSON' record
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 

@@ -7,7 +7,7 @@
    Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
    Stability:   experimental
 
-   Implements tracks and related types and functions
+   Implements users related types and functions
 -}
 
 module Network.SoundCloud.User where
@@ -40,12 +40,12 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
--- | Decode a JSON record out of a user's valid JSON string
+-- | Decode a 'JSON' record out of a user's valid JSON string
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
--- | Get a JSON record given an user URL
--- as in http://soundcloud.com/artist
+-- | Get a 'JSON' record given an user URL
+-- as in <http://soundcloud.com/artist>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url

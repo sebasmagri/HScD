@@ -16,11 +16,13 @@ import System.IO
 
 import Network.SoundCloud.Const
 
--- | Issue a GET request to an URL and returns
--- the response body as a String or Nothing on failure.
--- If 'followRedirections' is set to True, new requests
--- will be made on 3XX response codes to the Location of
--- the response.
+-- | Issue a @GET@ request to an URL given as first parameter
+-- and returns the response body as a 'String' or 'Nothing'
+-- on failure.
+--
+-- If the second argument is set to 'True', and a @3XX@
+-- response code is found, a new request will be made
+-- to the @Location@ header of the response.
 scGet :: String -> Bool -> IO (Maybe String)
 scGet url followRedirections =
     do res <- simpleHTTP $ getRequest url
@@ -38,8 +40,9 @@ scGet url followRedirections =
                          else return $ Just uri
                _ -> return Nothing
 
--- | Issue a GET request to 'dUrl' and save the response body
--- to a file in the path indicated by the 'out' parameter
+-- | Given an URL as a first parameter, and a path as a second,
+-- issue a @GET@ request to the @URL@ and save the response body
+-- to a file at @path@.
 scFetch :: String -> String -> IO ()
 scFetch dUrl out =
     do contents <- scGet dUrl True
@@ -52,14 +55,22 @@ scFetch dUrl out =
 
 -- | Given an arbitrary resource URL, returns the type of the
 -- resource.
+--
 -- The response can be one of:
---   "track"
---   "user"
---   "set"
---   "group"
---   "comment"
---   "app"
---   "nothing"
+--
+--   * @track@
+--
+--   * @user@
+--
+--   * @set@
+--
+--   * @group@
+--
+--   * @comment@
+--
+--   * @app@
+--
+--   * @nothing@
 scResourceType :: String -> String
 scResourceType url | tracksURL    `isPrefixOf` url      = "track"
                    | usersURL     `isPrefixOf` url      = "user"
@@ -75,9 +86,12 @@ so we can just return the redirection Location
 -}
 -- | Get the API url of a resource given its public URL.
 -- In example, for a public URL like:
---     http://soundcloud.com/user/track
+--
+--     <http://soundcloud.com/user/track>
+--
 -- It returns the API URL:
---     http://api.soundcloud.com/tracks/<track_id>.json?client_id=<foo>
+--
+--     <http://api.soundcloud.com/tracks/track_id.json?client_id=foo>
 scResolve :: String -> IO String
 scResolve url =
     do dat <- scGet resolveUrl False

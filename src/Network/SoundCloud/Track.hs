@@ -7,7 +7,7 @@
    Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
    Stability:   experimental
 
-   Implements tracks and related types and functions
+   Implements tracks related types and functions
 -}
 
 module Network.SoundCloud.Track where
@@ -64,12 +64,12 @@ data DownloadJSON = DownloadJSON { download_url     :: String
 instance FromJSON DownloadJSON
 instance ToJSON   DownloadJSON
 
--- | Decode a JSON record from a track valid JSON string
+-- | Decode a 'JSON' record from a track valid JSON string
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
--- | Get a JSON record given a track URL
--- as in http://soundcloud.com/artist/track_title
+-- | Get a 'JSON' record given a track URL
+-- as in <http://soundcloud.com/artist/track_title>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url
@@ -78,15 +78,15 @@ getJSON url =
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d
 
--- | Decode a DownloadJSON record out of a track's JSON
+-- | Decode a 'DownloadJSON' record out of a track's JSON
 decodeDownloadJSON :: String -> Maybe DownloadJSON
 decodeDownloadJSON dat = decode (BSL.pack dat) :: Maybe DownloadJSON
 
--- | Decode a comment JSON list given a track id
+-- | Decode a "Network.SoundCloud.Comment" @JSON@ list given a track id
 decodeComments :: String -> Maybe [Comment.JSON]
 decodeComments dat = decode (BSL.pack dat) :: Maybe [Comment.JSON]
 
--- | Given the track id, get its comments as a list of Comment.JSON
+-- | Given the track id, get its comments as a list of "Network.SoundCloud.Comment" @JSON@
 getComments :: Int -> IO (Maybe [Comment.JSON])
 getComments trackId =
     do let url = tracksURL ++ "/" ++ show trackId ++ "/comments.json?client_id=" ++ clientId

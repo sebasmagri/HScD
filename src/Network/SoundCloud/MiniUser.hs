@@ -28,7 +28,7 @@ data JSON = JSON { id               :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
--- | Decode a JSON record from a valid miniuser
+-- | Decode a 'JSON' record from a valid miniuser
 -- JSON string
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON

@@ -7,7 +7,7 @@
    Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
    Stability:   experimental
 
-   Represents SoundCloud applications as found at http://soundcloud.com/apps
+   Represents SoundCloud applications as found at <http://soundcloud.com/apps>
 -}
 
 module Network.SoundCloud.App where
@@ -19,8 +19,7 @@ import Text.Printf (printf)
 
 import Network.SoundCloud.Util (scGet, scResolve)
 
--- | JSON representation of applications as described
--- in http://developers.soundcloud.com/docs/api/apps
+-- | JSON representation of applications
 data JSON = JSON { id                     :: Int
                  , permalink_url          :: String
                  , external_url           :: String
@@ -31,13 +30,13 @@ instance FromJSON JSON
 instance ToJSON   JSON
 
 -- | Decode a valid JSON string into an application
--- JSON record
+-- 'JSON' record
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 
 
--- | Get an application JSON record given a public app URL
--- as in http://soundcloud.com/apps/app_name
+-- | Get an application 'JSON' record given a public app URL
+-- as in <http://soundcloud.com/apps/app_name>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
     do tUrl <- scResolve url

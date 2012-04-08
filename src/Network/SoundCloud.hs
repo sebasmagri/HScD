@@ -5,8 +5,42 @@
    Maintainer:  Sebastián Ramírez Magrí <sebasmagri@gmail.com>
    Stability:   experimental
 
-   The 'Network.SoundCloud' module provides functions and types to access
+   The @Network.SoundCloud@ module provides functions and types to access
    the soundcloud.com public API.
+
+   /Resource Modules/
+
+   The library is composed by a set of modules implementing datatypes and
+   functions for the resources available through the API. Namely,
+
+     * "Network.SoundCloud.App"
+
+     * "Network.SoundCloud.Comment"
+
+     * "Network.SoundCloud.Group"
+
+     * "Network.SoundCloud.MiniUser"
+
+     * "Network.SoundCloud.Set"
+
+     * "Network.SoundCloud.Track"
+
+     * "Network.SoundCloud.User"
+
+   Every resource module defines at least a @JSON@ record and the @getJSON@ and @decodeJSON@ functions.
+
+   /Base Modules/
+
+   The base modules provide values and functions that are to be used by the rest of the modules in the
+   library. The base modules are,
+
+     * "Network.SoundCloud.Const"
+
+     * "Network.SoundCloud.Util"
+
+   /API Documentation/
+
+   Documentation of the SoundCloud's API can be found at <http://developers.soundcloud.com/docs/>
 -}
 
 module Network.SoundCloud (
@@ -15,7 +49,7 @@ module Network.SoundCloud (
   scResolve,
   scResourceType,
   scResourceShowInfo,
-  scShowInfo,
+  scShowInfo
   ) where
 
 import Network.SoundCloud.Util (scGet, scFetch, scResolve, scResourceType)

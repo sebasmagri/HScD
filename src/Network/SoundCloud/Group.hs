@@ -33,7 +33,7 @@ data JSON = JSON { id                     :: Int
 instance FromJSON JSON
 instance ToJSON   JSON
 
--- | Decode a group's valid JSON string into a record
+-- | Decode a group's valid JSON string into a 'JSON' record
 decodeJSON :: String -> Maybe JSON
 decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 

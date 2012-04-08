@@ -32,7 +32,7 @@ library
                  , bytestring
                  , ghc-prim
                  , HTTP
-    other-modules:
+    exposed-modules:
         Network.SoundCloud
         Network.SoundCloud.App
         Network.SoundCloud.Comment

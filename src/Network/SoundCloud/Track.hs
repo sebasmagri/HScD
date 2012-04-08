@@ -19,7 +19,7 @@ import GHC.Generics (Generic)
 import Prelude hiding (id)
 import Text.Printf (printf)
 
-import Network.SoundCloud.Util (scGet, scFetch, scResolve)
+import Network.SoundCloud.Util (scRecursiveGet, scFetch, scResolve)
 import Network.SoundCloud.Const (clientId, tracksURL)
 import qualified Network.SoundCloud.MiniUser as User
 import qualified Network.SoundCloud.Comment as Comment
@@ -72,8 +72,7 @@ decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 -- as in <http://soundcloud.com/artist/track_title>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
-    do tUrl <- scResolve url
-       dat  <- scGet tUrl True
+    do dat  <- scRecursiveGet =<< scResolve url
        case dat of
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d
@@ -90,7 +89,7 @@ decodeComments dat = decode (BSL.pack dat) :: Maybe [Comment.JSON]
 getComments :: Int -> IO (Maybe [Comment.JSON])
 getComments trackId =
     do let url = tracksURL ++ "/" ++ show trackId ++ "/comments.json?client_id=" ++ clientId
-       dat <- scGet url True
+       dat <- scRecursiveGet url
        case dat of
          Nothing -> return Nothing
          Just d  -> return $ decodeComments d
@@ -98,8 +97,7 @@ getComments trackId =
 -- | Fetch a downloadable track
 fetch :: String -> String -> IO ()
 fetch trackUrl output =
-    do tUrl <- scResolve trackUrl
-       dat <- scGet tUrl True
+    do dat <- scRecursiveGet =<< scResolve trackUrl
        case dat of
          Nothing -> putStrLn "Unable to connect"
          Just d  ->

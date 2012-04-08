@@ -8,7 +8,13 @@
    General functions used by other modules
 -}
 
-module Network.SoundCloud.Util where
+module Network.SoundCloud.Util (
+  scSimpleGet,
+  scRecursiveGet,
+  scFetch,
+  scResourceType,
+  scResolve
+  ) where
 
 import Data.List
 import Network.HTTP
@@ -16,15 +22,15 @@ import System.IO
 
 import Network.SoundCloud.Const
 
--- | Issue a @GET@ request to an URL given as first parameter
+-- | Issue a @GET@ request to an URL given as second parameter
 -- and returns the response body as a 'String' or 'Nothing'
 -- on failure.
 --
--- If the second argument is set to 'True', and a @3XX@
+-- If the first argument is set to 'True', and a @3XX@
 -- response code is found, a new request will be made
 -- to the @Location@ header of the response.
-scGet :: String -> Bool -> IO (Maybe String)
-scGet url followRedirections =
+scGet :: Bool -> String -> IO (Maybe String)
+scGet followRedirections url =
     do res <- simpleHTTP $ getRequest url
        case res of
          Left   _ -> return Nothing
@@ -36,16 +42,26 @@ scGet url followRedirections =
                      Nothing       -> return Nothing
                      Just uri      ->
                          if followRedirections
-                         then scGet uri True
+                         then scRecursiveGet uri
                          else return $ Just uri
                _ -> return Nothing
+
+-- | Issue a @GET@ HTTP request to the passed URL returning
+-- @Nothing@ if a response code different than 2XX is found.
+scSimpleGet :: String -> IO (Maybe String)
+scSimpleGet = scGet False
+
+-- | Issue a @GET@ HTTP request to the passed URL recursing
+-- over redirections
+scRecursiveGet :: String -> IO (Maybe String)
+scRecursiveGet = scGet True
 
 -- | Given an URL as a first parameter, and a path as a second,
 -- issue a @GET@ request to the @URL@ and save the response body
 -- to a file at @path@.
 scFetch :: String -> String -> IO ()
 scFetch dUrl out =
-    do contents <- scGet dUrl True
+    do contents <- scRecursiveGet dUrl
        case contents of
          Nothing -> putStrLn "Could not fetch file contents."
          Just  c ->
@@ -94,7 +110,7 @@ so we can just return the redirection Location
 --     <http://api.soundcloud.com/tracks/track_id.json?client_id=foo>
 scResolve :: String -> IO String
 scResolve url =
-    do dat <- scGet resolveUrl False
+    do dat <- scSimpleGet resolveUrl
        case dat of
          Nothing        -> return ""
          Just d         -> return d

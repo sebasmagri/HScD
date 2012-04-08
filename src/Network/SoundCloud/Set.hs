@@ -19,7 +19,7 @@ import Text.Printf (printf)
 
 import qualified Network.SoundCloud.MiniUser as User
 import qualified Network.SoundCloud.Track as Track
-import Network.SoundCloud.Util (scGet, scResolve)
+import Network.SoundCloud.Util (scRecursiveGet, scResolve)
 
 -- | Represents Set JSON as a record
 data JSON = JSON { id                     :: Int
@@ -53,8 +53,7 @@ decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 -- as in <http://soundcloud.com/artist/set_title>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
-    do tUrl <- scResolve url
-       dat  <- scGet tUrl True
+    do dat  <- scRecursiveGet =<< scResolve url
        case dat of
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d

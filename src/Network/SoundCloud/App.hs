@@ -17,7 +17,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import GHC.Generics (Generic)
 import Text.Printf (printf)
 
-import Network.SoundCloud.Util (scGet, scResolve)
+import Network.SoundCloud.Util (scRecursiveGet, scResolve)
 
 -- | JSON representation of applications
 data JSON = JSON { id                     :: Int
@@ -39,8 +39,7 @@ decodeJSON dat = decode (BSL.pack dat) :: Maybe JSON
 -- as in <http://soundcloud.com/apps/app_name>
 getJSON :: String -> IO (Maybe JSON)
 getJSON url =
-    do tUrl <- scResolve url
-       dat  <- scGet tUrl True
+    do dat <- scRecursiveGet =<< scResolve url
        case dat of
          Nothing -> return Nothing
          Just d  -> return $ decodeJSON d

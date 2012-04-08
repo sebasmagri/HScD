@@ -44,7 +44,8 @@
 -}
 
 module Network.SoundCloud (
-  scGet,
+  scSimpleGet,
+  scRecursiveGet,
   scFetch,
   scResolve,
   scResourceType,
@@ -52,7 +53,7 @@ module Network.SoundCloud (
   scShowInfo
   ) where
 
-import Network.SoundCloud.Util (scGet, scFetch, scResolve, scResourceType)
+import Network.SoundCloud.Util (scSimpleGet, scRecursiveGet, scFetch, scResolve, scResourceType)
 
 import qualified Network.SoundCloud.App         as App
 import qualified Network.SoundCloud.Group       as Group
@@ -71,6 +72,4 @@ scResourceShowInfo _                                     = putStrLn "Unrecognize
 
 -- | Show information about a resource given its public URL
 scShowInfo :: String -> IO ()
-scShowInfo url =
-    do rUrl <- scResolve url
-       scResourceShowInfo rUrl
+scShowInfo url = scResourceShowInfo =<< scResolve url

@@ -1,5 +1,5 @@
 name:           hscd
-version:        0.0.2
+version:        0.0.2.1
 category:       Network
 license:        BSD3
 license-file:   LICENSE
@@ -26,13 +26,12 @@ source-repository head
     type:     mercurial
     location: https://bitbucket.org/sebasmagri/hscd
 
-executable hscd
+library
     build-depends: aeson        == 0.6.*
                  , base         == 4.*
                  , bytestring
                  , ghc-prim
                  , HTTP
-    main-is: hscd.hs
     other-modules:
         Network.SoundCloud
         Network.SoundCloud.App
@@ -45,4 +44,12 @@ executable hscd
         Network.SoundCloud.User
         Network.SoundCloud.Util
     hs-source-dirs: src/
-    ghc-options: -W -Wall
+
+executable hscd
+    build-depends: aeson        == 0.6.*
+                 , base         == 4.*
+                 , bytestring
+                 , ghc-prim
+                 , HTTP
+    main-is: hscd.hs
+    hs-source-dirs: src/

@@ -42,7 +42,7 @@ data JSON = JSON { id                     :: Int
                  , release_year           :: Maybe Int
                  , streamable             :: Bool
                  , downloadable           :: Bool
-                 , track_type             :: String
+                 , track_type             :: Maybe String
                  , stream_url             :: String
                  , bpm                    :: Maybe Int
                  , comment_count          :: Int
